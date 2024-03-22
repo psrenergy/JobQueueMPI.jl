@@ -9,14 +9,18 @@ mutable struct Worker
 end
 
 function workers_loop(f, args...)
-    worker = Worker(my_rank())
-    while true
-        message = MPI.recv(comm(); source = controller_rank(), tag = worker.rank + 32)
-        if message == TerminationMessage()
-            break
+    if is_worker_process()
+        worker = Worker(my_rank())
+        while true
+            message = MPI.recv(comm(); source = controller_rank(), tag = worker.rank + 32)
+            if message == TerminationMessage()
+                break
+            end
+            message = f(args...)
+            send_message_to_controller(worker, message)
         end
-        message = f(args...)
-        send_message_to_controller(worker, message)
+    else
+        error("This function should only be called by worker processes.")
     end
     return 0
 end
