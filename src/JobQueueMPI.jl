@@ -2,6 +2,8 @@ module JobQueueMPI
 
 using MPI
 
-include("utils.jl")
+include("mpi_utils.jl")
+include("worker.jl")
+include("controller.jl")
 
 end # module JobQueueMPI
