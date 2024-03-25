@@ -18,6 +18,23 @@ function update_data(new_data, message::Message)
     return new_data[idx] = value
 end
 
+function workers_loop()
+    if JQM.is_worker_process()
+        worker = Worker()
+        while true
+            job = JQM.receive_job(worker)
+            if job == TerminationMessage()
+                break
+            end
+            message = JQM.get_message(job)
+            job_task = JQM.get_task(job)
+            return_job = job_task(message)
+            JQM.send_job_to_controller(worker, return_job)
+        end
+        exit(0)
+    end
+end
+
 function job_queue(data)
     JQM.mpi_init()
     JQM.mpi_barrier()
@@ -56,20 +73,8 @@ function job_queue(data)
         JQM.send_termination_message(controller)
 
         return new_data
-    else # If rank == worker
-        worker = Worker()
-        while true
-            job = JQM.receive_job(worker)
-            if job == TerminationMessage()
-                break
-            end
-            message = JQM.get_message(job)
-            job_task = JQM.get_task(job)
-            return_job = job_task(message)
-            JQM.send_job_to_controller(worker, return_job)
-        end
-        exit(0)
     end
+    workers_loop()
     JQM.mpi_barrier()
     return JQM.mpi_finalize()
 end
