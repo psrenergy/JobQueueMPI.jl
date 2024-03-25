@@ -1,0 +1,11 @@
+@echo off
+
+SET BASEPATH=%~dp0
+
+SET XPRESSDIR=
+SET XPAUTH_PATH=
+SET XPRESS_JL_NO_DEPS_ERROR=1
+SET XPRESS_JL_NO_AUTO_INIT=1
+SET XPRESS_JL_SKIP_LIB_CHECK=1
+
+CALL "%JULIA_194%" --project=%BASEPATH%\.. -e "import Pkg; Pkg.Registry.update(); Pkg.test()"

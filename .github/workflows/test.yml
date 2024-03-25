@@ -1,48 +1,27 @@
-name: Test
+name: test
 on:
   push:
-    branches: [master]
+    branches: [master, develop]
   pull_request:
     types: [opened, synchronize, reopened]
+concurrency:
+  # Skip intermediate builds: always.
+  # Cancel intermediate builds: only if it is a pull request build.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 jobs:
-  test:
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - version: '1'
-            os: windows-latest
-            arch: x64
-          - version: '1.6'
-            os: windows-latest
-            arch: x64
-          - version: '1'
-            os: ubuntu-latest
-            arch: x64
-          - version: '1.6'
-            os: ubuntu-latest
-            arch: x64
+  test-windows:
+    name: Test Windows
+    runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v2
-      - uses: julia-actions/setup-julia@v1
+      - name: Initialize instance
+        run: |
+          Remove-Item -Path '${{ github.workspace }}\*' -Force -Recurse
+
+      - uses: actions/checkout@v3
         with:
-          version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
-      - uses: actions/cache@v1
-        env:
-          cache-name: cache-artifacts
-        with:
-          path: ~/.julia/artifacts
-          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-test-${{ env.cache-name }}-
-            ${{ runner.os }}-test-
-            ${{ runner.os }}-
-      - uses: julia-actions/julia-buildpkg@v1
-      - uses: julia-actions/julia-runtest@v1
-      - uses: julia-actions/julia-processcoverage@v1
-      - uses: codecov/codecov-action@v1
-        with:
-          file: lcov.info
+          fetch-depth: 0
+
+      - name: Test
+        run: |
+          .\test\test.bat
