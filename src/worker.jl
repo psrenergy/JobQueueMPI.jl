@@ -6,25 +6,19 @@ end
 
 mutable struct Worker
     rank::Int
+    Worker() = new(my_rank())
 end
 
-function workers_loop(f, args...)
-    if is_worker_process()
-        worker = Worker(my_rank())
-        while true
-            message = MPI.recv(comm(); source = controller_rank(), tag = worker.rank + 32)
-            if message == TerminationMessage()
-                break
-            end
-            message = f(args...)
-            send_message_to_controller(worker, message)
-        end
-    else
-        error("This function should only be called by worker processes.")
-    end
-    return 0
+function reset_request(worker::Worker)
+    return worker.request = nothing
 end
 
-function send_message_to_controller(worker::Worker, message::Any)
-    return MPI.send(message, _mpi_comm(); dest=controller_rank(), tag=worker.rank + 32)
+has_job(worker::Worker) =
+    MPI.Iprobe(_mpi_comm(); source = controller_rank(), tag = worker.rank + 32) == true
+
+function send_job_to_controller(worker::Worker, job::Any)
+    return MPI.isend(job, _mpi_comm(); dest = controller_rank(), tag = worker.rank + 32)
 end
+
+receive_job(worker::Worker) =
+    MPI.recv(_mpi_comm(); source = controller_rank(), tag = worker.rank + 32)
