@@ -7,6 +7,11 @@ mutable struct Message
     vector_idx::Int
 end
 
+has_messages_to_send(sent_messages, total_messages) = sent_messages < total_messages
+has_messages_to_receive(delivered_messages, total_messages) = delivered_messages < total_messages
+job_queue_done(sent_messages, delivered_messages, total_messages) =
+    sent_messages == total_messages && delivered_messages == total_messages
+
 function sum_100(message::Message)
     message.value += 100
     return JobAnswer(message)
@@ -54,13 +59,12 @@ function job_queue(data)
             JQM.add_job_to_queue!(controller, message, sum_100)
         end
 
-        while sent_messages < N || delivered_messages < N
-            if sent_messages < N
-                if JQM.send_job_to_any_available_worker(controller)
-                    sent_messages += 1
-                end
+        while !job_queue_done(sent_messages, delivered_messages, N)
+            if has_messages_to_send(sent_messages, N)
+                requests = JQM.send_job_to_any_available_worker(controller)
+                sent_messages += length(requests)
             end
-            if delivered_messages < N
+            if has_messages_to_receive(delivered_messages, N)
                 job_answer = JQM.check_for_workers_job(controller)
                 if !isnothing(job_answer)
                     message = JQM.get_message(job_answer)
