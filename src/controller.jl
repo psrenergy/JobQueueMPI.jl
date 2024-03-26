@@ -66,9 +66,17 @@ end
 
 function check_for_workers_job(controller::Controller)
     for j_i in eachindex(controller.pending_jobs)
-        has_job = MPI.Iprobe(_mpi_comm(); source = controller.pending_jobs[j_i].worker, tag = controller.pending_jobs[j_i].worker + 32)
+        has_job = MPI.Iprobe(
+            _mpi_comm();
+            source = controller.pending_jobs[j_i].worker,
+            tag = controller.pending_jobs[j_i].worker + 32,
+        )
         if has_job
-            job = MPI.recv(_mpi_comm(); source = controller.pending_jobs[j_i].worker, tag = controller.pending_jobs[j_i].worker + 32)
+            job = MPI.recv(
+                _mpi_comm();
+                source = controller.pending_jobs[j_i].worker,
+                tag = controller.pending_jobs[j_i].worker + 32,
+            )
             controller.worker_status[controller.pending_jobs[j_i].worker] = WORKER_AVAILABLE
             deleteat!(controller.pending_jobs, j_i)
             return job
