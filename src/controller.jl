@@ -57,11 +57,11 @@ function _any_available_workers(controller::Controller)
     return false
 end
 
-function add_job_to_queue!(controller::Controller, message::Any, f::Function)
-    return push!(controller.job_queue, Job(message, f))
+function add_job_to_queue!(controller::Controller, message::Any)
+    return push!(controller.job_queue, Job(message))
 end
 
-function send_job_to_any_available_worker(controller::Controller)
+function send_jobs_to_any_available_workers(controller::Controller)
     available_workers = _pick_available_workers(controller)
     requests = Vector{JobRequest}()
     for worker in available_workers
@@ -80,7 +80,7 @@ function send_termination_message(controller::Controller)
     requests = Vector{JobRequest}()
     for worker in 1:controller.n_workers
         request = MPI.isend(TerminationMessage(), _mpi_comm(); dest = worker, tag = worker + 32)
-        controller.worker_status[worker] = WORKER_TERMINATED
+        controller.worker_status[worker] = WORKER_AVAILABLE
         push!(requests, JobRequest(worker, request))
     end
     return _wait_all(requests)

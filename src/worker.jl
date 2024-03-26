@@ -1,7 +1,6 @@
 @enum WorkerStatus begin
     WORKER_BUSY = 0
     WORKER_AVAILABLE = 1
-    WORKER_TERMINATED = 2
 end
 
 mutable struct Worker

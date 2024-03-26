@@ -32,8 +32,7 @@ function workers_loop()
                 break
             end
             message = JQM.get_message(job)
-            job_task = JQM.get_task(job)
-            return_job = job_task(message)
+            return_job = sum_100(message)
             JQM.send_job_to_controller(worker, return_job)
         end
         exit(0)
@@ -56,12 +55,12 @@ function job_queue(data)
 
         for i in eachindex(data)
             message = Message(data[i], i)
-            JQM.add_job_to_queue!(controller, message, sum_100)
+            JQM.add_job_to_queue!(controller, message)
         end
 
         while !job_queue_done(sent_messages, delivered_messages, N)
             if has_messages_to_send(sent_messages, N)
-                requests = JQM.send_job_to_any_available_worker(controller)
+                requests = JQM.send_jobs_to_any_available_workers(controller)
                 sent_messages += length(requests)
             end
             if has_messages_to_receive(delivered_messages, N)
@@ -80,7 +79,8 @@ function job_queue(data)
     end
     workers_loop()
     JQM.mpi_barrier()
-    return JQM.mpi_finalize()
+    JQM.mpi_finalize()
+    return nothing
 end
 
 @testset "Sum 100" begin

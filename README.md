@@ -22,10 +22,3 @@ JobQueueMPI.jl has the following components:
 
 - `Controller`: The controller is responsible for managing the jobs and the workers. It keeps track of the jobs that have been sent and received and sends the jobs to the available workers.
 - `Worker`: The worker is responsible for executing the jobs. It receives the jobs from the controller, executes them, and sends the results back to the controller.
-
-The `Controller` picks a `Job` from the job queue and sends it to a `Worker`. This `Job` contains a `message` and a `function` to be executed.
-
-The `Worker` receives the `Job`, executes the `function` with the `message` as input, and sends the result back to the `Controller` as a `JobAnswer`. A `JobAnswer` contains only a `message`.
-
-The `Worker` stays idle waiting for a `Job` in what we usually call the `workers_loop`. The `Controller` keeps sending jobs to the available workers until all jobs have been sent and received.
-
