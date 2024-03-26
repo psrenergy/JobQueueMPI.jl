@@ -7,10 +7,7 @@ mutable struct Message
     vector_idx::Int
 end
 
-has_messages_to_send(sent_messages, total_messages) = sent_messages < total_messages
-has_messages_to_receive(delivered_messages, total_messages) = delivered_messages < total_messages
-job_queue_done(sent_messages, delivered_messages, total_messages) =
-    sent_messages == total_messages && delivered_messages == total_messages
+all_jobs_done(controller) = JQM.is_job_queue_empty(controller) && !JQM.any_pending_jobs(controller)
 
 function sum_100(message::Message)
     message.value += 100
@@ -48,8 +45,6 @@ function job_queue(data)
 
     if JQM.is_controller_process() # I am root
         new_data = Array{T}(undef, N)
-        sent_messages = 0
-        delivered_messages = 0
 
         controller = Controller(JQM.num_workers())
 
@@ -58,17 +53,15 @@ function job_queue(data)
             JQM.add_job_to_queue!(controller, message)
         end
 
-        while !job_queue_done(sent_messages, delivered_messages, N)
-            if has_messages_to_send(sent_messages, N)
-                requests = JQM.send_jobs_to_any_available_workers(controller)
-                sent_messages += length(requests)
+        while !all_jobs_done(controller)
+            if !JQM.is_job_queue_empty(controller)
+                JQM.send_jobs_to_any_available_workers(controller)
             end
-            if has_messages_to_receive(delivered_messages, N)
+            if JQM.any_pending_jobs(controller)
                 job_answer = JQM.check_for_workers_job(controller)
                 if !isnothing(job_answer)
                     message = JQM.get_message(job_answer)
                     update_data(new_data, message)
-                    delivered_messages += 1
                 end
             end
         end
