@@ -12,6 +12,8 @@ mutable struct WorkerMessage
     vector_idx::Int
 end
 
+all_jobs_done(controller) = JQM.is_job_queue_empty(controller) && !JQM.any_pending_jobs(controller)
+
 function get_divisors(message::ControllerMessage)
     number = message.value
     divisors = []
@@ -40,8 +42,7 @@ function workers_loop()
                 break
             end
             message = JQM.get_message(job)
-            job_task = JQM.get_task(job)
-            return_job = job_task(message)
+            return_job = get_divisors(message)
             JQM.send_job_to_controller(worker, return_job)
         end
         exit(0)
@@ -56,28 +57,23 @@ function divisors(data)
 
     if JQM.is_controller_process() # I am root
         new_data = Array{Array{Int}}(undef, N)
-        sent_messages = 0
-        delivered_messages = 0
 
         controller = Controller(JQM.num_workers())
 
         for i in eachindex(data)
             message = ControllerMessage(data[i], i)
-            JQM.add_job_to_queue!(controller, message, get_divisors)
+            JQM.add_job_to_queue!(controller, message)
         end
 
-        while sent_messages < N || delivered_messages < N
-            if sent_messages < N
-                if JQM.send_job_to_any_available_worker(controller)
-                    sent_messages += 1
-                end
+        while !all_jobs_done(controller)
+            if !JQM.is_job_queue_empty(controller)
+                JQM.send_jobs_to_any_available_workers(controller)
             end
-            if delivered_messages < N
+            if JQM.any_pending_jobs(controller)
                 job_answer = JQM.check_for_workers_job(controller)
                 if !isnothing(job_answer)
                     message = JQM.get_message(job_answer)
                     update_data(new_data, message)
-                    delivered_messages += 1
                 end
             end
         end
@@ -88,7 +84,8 @@ function divisors(data)
     end
     workers_loop()
     JQM.mpi_barrier()
-    return JQM.mpi_finalize()
+    JQM.mpi_finalize()
+    return nothing
 end
 
 @testset "Divisors" begin
