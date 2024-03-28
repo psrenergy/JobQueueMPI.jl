@@ -24,7 +24,7 @@ function get_divisors(message::ControllerMessage)
         end
     end
 
-    return JQM.JobAnswer(WorkerMessage(divisors, message.vector_idx))
+    return WorkerMessage(divisors, message.vector_idx)
 end
 
 function update_data(new_data, message::WorkerMessage)
@@ -35,15 +35,15 @@ end
 
 function workers_loop()
     if JQM.is_worker_process()
-        worker = Worker()
+        worker = JQM.Worker()
         while true
             job = JQM.receive_job(worker)
-            if job == TerminationMessage()
+            message = JQM.get_message(job)
+            if message == JQM.TerminationMessage()
                 break
             end
-            message = JQM.get_message(job)
-            return_job = get_divisors(message)
-            JQM.send_job_to_controller(worker, return_job)
+            return_message = get_divisors(message)
+            JQM.send_job_answer_to_controller(worker, return_message)
         end
         exit(0)
     end
@@ -58,7 +58,7 @@ function divisors(data)
     if JQM.is_controller_process() # I am root
         new_data = Array{Array{Int}}(undef, N)
 
-        controller = Controller(JQM.num_workers())
+        controller = JQM.Controller(JQM.num_workers())
 
         for i in eachindex(data)
             message = ControllerMessage(data[i], i)
@@ -70,7 +70,7 @@ function divisors(data)
                 JQM.send_jobs_to_any_available_workers(controller)
             end
             if JQM.any_pending_jobs(controller)
-                job_answer = JQM.check_for_workers_job(controller)
+                job_answer = JQM.check_for_job_answers(controller)
                 if !isnothing(job_answer)
                     message = JQM.get_message(job_answer)
                     update_data(new_data, message)
