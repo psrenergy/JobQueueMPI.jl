@@ -8,7 +8,7 @@
 
 | **Build Status** | **Coverage** | 
 |:-----------------:|:-----------------:|
-| [![Build Status][build-img]][build-url] | [![Codecov branch][codecov-img]][codecov-url] |[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://psrenergy.github.io/PSRClassesInterface.jl/dev/)
+| [![Build Status][build-img]][build-url] | [![Codecov branch][codecov-img]][codecov-url] |[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://psrenergy.github.io/JobQueueMPI.jl/dev/)
 
 
 JobQueueMPI.jl is a Julia package that provides a simplified interface for running multiple jobs in parallel using [MPI.jl](https://github.com/JuliaParallel/MPI.jl).

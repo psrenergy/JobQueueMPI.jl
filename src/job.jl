@@ -1,6 +1,6 @@
 abstract type AbstractJob end
 
-@kwdef mutable struct Job{T} <: AbstractJob
+Base.@kwdef mutable struct Job{T} <: AbstractJob
     id::Int = 0
     message::T
 end
@@ -15,6 +15,11 @@ mutable struct JobRequest
     request::MPI.Request
 end
 
+"""
+    get_message(job::AbstractJob)
+
+Get the message from a job.
+"""
 get_message(job::AbstractJob) = job.message
 
 function _wait_all(job_requests::Vector{JobRequest})

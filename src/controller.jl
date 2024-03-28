@@ -1,4 +1,8 @@
 """
+    Controller
+
+The controller struct is used to manage the workers and the jobs. It keeps track of the workers' status,
+the job queue, and the pending jobs. It also keeps track of the last job id that was sent to the workers.
 """
 mutable struct Controller
     n_workers::Int
@@ -48,6 +52,11 @@ function _pick_available_workers(controller::Controller)
     return available_workers
 end
 
+"""
+    add_job_to_queue!(controller::Controller, message::Any)
+
+Add a job to the controller's job queue.
+"""
 function add_job_to_queue!(controller::Controller, message::Any)
     if !is_controller_process()
         error("Only the controller process can add jobs to the queue.")
@@ -56,6 +65,11 @@ function add_job_to_queue!(controller::Controller, message::Any)
     return push!(controller.job_queue, Job(controller.last_job_id, message))
 end
 
+"""
+    send_jobs_to_any_available_workers(controller::Controller)
+
+Send jobs to any available workers.
+"""
 function send_jobs_to_any_available_workers(controller::Controller)
     if !is_controller_process()
         error("Only the controller process can send jobs to workers.")
@@ -72,6 +86,11 @@ function send_jobs_to_any_available_workers(controller::Controller)
     return nothing
 end
 
+"""
+    send_termination_message(controller::Controller)
+
+Send a termination message to all workers.
+"""
 function send_termination_message(controller::Controller)
     if !is_controller_process()
         error("Only the controller process can send termination messages.")
@@ -85,6 +104,11 @@ function send_termination_message(controller::Controller)
     return _wait_all(requests)
 end
 
+"""
+    check_for_job_answers(controller::Controller)
+
+Check if any worker has completed a job and return the answer.
+"""
 function check_for_job_answers(controller::Controller)
     if !is_controller_process()
         error("Only the controller process can check for workers' jobs.")
