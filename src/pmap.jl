@@ -71,5 +71,5 @@ function pmap(f::Function, jobs::Vector, data_defined_in_process = nothing)
         end
         return result
     end
-    error("Should never get here")
+    return error("Should never get here")
 end

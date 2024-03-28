@@ -5,7 +5,7 @@ Base.@kwdef mutable struct Job{T} <: AbstractJob
     message::T
 end
 
- mutable struct JobAnswer{T} <: AbstractJob
+mutable struct JobAnswer{T} <: AbstractJob
     job_id::Int
     message::T
 end

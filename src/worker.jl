@@ -15,7 +15,7 @@ mutable struct Worker
 end
 
 function has_job(worker::Worker)
-    MPI.Iprobe(_mpi_comm(); source = controller_rank(), tag = worker.rank + 32)
+    return MPI.Iprobe(_mpi_comm(); source = controller_rank(), tag = worker.rank + 32)
 end
 
 """

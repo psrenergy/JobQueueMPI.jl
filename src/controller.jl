@@ -25,7 +25,7 @@ is_job_queue_empty(controller::Controller) = isempty(controller.job_queue)
 any_pending_jobs(controller::Controller) = !isempty(controller.pending_jobs)
 
 function any_jobs_left(controller::Controller)
-    !is_job_queue_empty(controller) || any_pending_jobs(controller)
+    return !is_job_queue_empty(controller) || any_pending_jobs(controller)
 end
 
 function _pick_job_to_send!(controller::Controller)
@@ -97,7 +97,8 @@ function send_termination_message(controller::Controller)
     end
     requests = Vector{JobRequest}()
     for worker in 1:controller.n_workers
-        request = MPI.isend(Job(controller.last_job_id, TerminationMessage()), _mpi_comm(); dest = worker, tag = worker + 32)
+        request =
+            MPI.isend(Job(controller.last_job_id, TerminationMessage()), _mpi_comm(); dest = worker, tag = worker + 32)
         controller.worker_status[worker] = WORKER_AVAILABLE
         push!(requests, JobRequest(worker, request))
     end
