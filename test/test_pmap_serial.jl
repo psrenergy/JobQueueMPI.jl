@@ -24,7 +24,7 @@ divisors_answer = JQM.pmap(get_divisors, collect(1:10))
 @testset "pmap serial" begin
     @test sum_100_answer == [101, 102, 103, 104, 105, 106, 107, 108, 109, 110]
     @test divisors_answer ==
-            [[1], [1, 2], [1, 3], [1, 2, 4], [1, 5], [1, 2, 3, 6], [1, 7], [1, 2, 4, 8], [1, 3, 9], [1, 2, 5, 10]]
+          [[1], [1, 2], [1, 3], [1, 2, 4], [1, 5], [1, 2, 3, 6], [1, 7], [1, 2, 4, 8], [1, 3, 9], [1, 2, 5, 10]]
 end
 
 JQM.mpi_finalize()
