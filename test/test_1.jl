@@ -11,7 +11,7 @@ all_jobs_done(controller) = JQM.is_job_queue_empty(controller) && !JQM.any_pendi
 
 function sum_100(message::Message)
     message.value += 100
-    return JQM.JobAnswer(message)
+    return message
 end
 
 function update_data(new_data, message::Message)
@@ -25,12 +25,12 @@ function workers_loop()
         worker = JQM.Worker()
         while true
             job = JQM.receive_job(worker)
-            if job == JQM.TerminationMessage()
+            message = JQM.get_message(job)
+            if message == JQM.TerminationMessage()
                 break
             end
-            message = JQM.get_message(job)
-            return_job = sum_100(message)
-            JQM.send_job_to_controller(worker, return_job)
+            return_message = sum_100(message)
+            JQM.send_job_answer_to_controller(worker, return_message)
         end
         exit(0)
     end
