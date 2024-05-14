@@ -53,7 +53,7 @@ function pmap(f::Function, jobs::Vector, data_defined_in_process = nothing)
                     end
                 end
             end
-            send_termination_message(controller)
+            send_termination_message()
             mpi_barrier()
             return result
         else

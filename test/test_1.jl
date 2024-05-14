@@ -66,7 +66,7 @@ function job_queue(data)
             end
         end
 
-        JQM.send_termination_message(controller)
+        JQM.send_termination_message()
 
         return new_data
     end

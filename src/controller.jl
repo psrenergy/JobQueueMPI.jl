@@ -87,19 +87,15 @@ function send_jobs_to_any_available_workers(controller::Controller)
 end
 
 """
-    send_termination_message(controller::Controller)
+    send_termination_message()
 
 Send a termination message to all workers.
 """
-function send_termination_message(controller::Controller)
-    if !is_controller_process()
-        error("Only the controller process can send termination messages.")
-    end
+function send_termination_message()
     requests = Vector{JobRequest}()
-    for worker in 1:controller.n_workers
+    for worker in 1:num_workers()
         request =
-            MPI.isend(Job(controller.last_job_id, TerminationMessage()), _mpi_comm(); dest = worker, tag = worker + 32)
-        controller.worker_status[worker] = WORKER_AVAILABLE
+            MPI.isend(Job(0, TerminationMessage()), _mpi_comm(); dest = worker, tag = worker + 32)
         push!(requests, JobRequest(worker, request))
     end
     return _wait_all(requests)
