@@ -32,7 +32,7 @@ let
         end
     else
         # optimize will call pmap multiple times
-        # hence the other processes nee to be continously canlling pmap
+        # hence, the other processes need to be continuously calling pmap
         # to work with the controller.
         # once the controller leaves the optimize function it will
         # broadcast a is_done = true, so that the workers stop the
