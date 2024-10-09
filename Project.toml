@@ -11,7 +11,8 @@ julia = "1.6"
 MPI = "0.20"
 
 [extras]
+Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["Optim", "Test"]
