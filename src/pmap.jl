@@ -39,10 +39,10 @@ The controller process will return the answer in the same order as the jobs were
 return nothing.
 """
 function pmap(
-    f::Function, 
-    jobs::Vector, 
-    data_defined_in_process = nothing; 
-    return_result_in_all_processes::Bool = false
+    f::Function,
+    jobs::Vector,
+    data_defined_in_process = nothing;
+    return_result_in_all_processes::Bool = true,
 )
     result = Vector{Any}(undef, length(jobs))
     if is_running_in_parallel()
