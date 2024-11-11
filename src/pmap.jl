@@ -19,7 +19,12 @@ function _p_map_workers_loop(f, data_defined_in_process)
 end
 
 """
-    pmap(f, jobs, data_defined_in_process = nothing)
+    pmap(
+        f::Function, 
+        jobs::Vector, 
+        data_defined_in_process = nothing; 
+        return_result_in_all_processes::Bool = false
+    )
 
 Parallel map function that works with MPI. If the function is called in parallel, it will
 distribute the jobs to the workers and collect the results. If the function is called in
@@ -28,10 +33,17 @@ serial, it will just map the function to the jobs.
 The function `f` should take one argument, which is the message to be processed. If `data_defined_in_process`
 is not `nothing`, the function `f` should take two arguments, the first one being `data_defined_in_process`.
 
+The `return_result_in_all_processes` argument is used to broadcast the result to all processes. If set to `true`.
+
 The controller process will return the answer in the same order as the jobs were given. The workers will
 return nothing.
 """
-function pmap(f::Function, jobs::Vector, data_defined_in_process = nothing)
+function pmap(
+    f::Function,
+    jobs::Vector,
+    data_defined_in_process = nothing;
+    return_result_in_all_processes::Bool = true,
+)
     result = Vector{Any}(undef, length(jobs))
     if is_running_in_parallel()
         mpi_barrier()
@@ -55,11 +67,19 @@ function pmap(f::Function, jobs::Vector, data_defined_in_process = nothing)
             end
             send_termination_message()
             mpi_barrier()
+            if return_result_in_all_processes
+                result = MPI.bcast(result, controller_rank(), MPI.COMM_WORLD)
+                mpi_barrier()
+            end
             return result
         else
             _p_map_workers_loop(f, data_defined_in_process)
             mpi_barrier()
-            return nothing
+            if return_result_in_all_processes
+                result = MPI.bcast(result, controller_rank(), MPI.COMM_WORLD)
+                mpi_barrier()
+            end
+            return result
         end
     else
         for (i, job) in enumerate(jobs)

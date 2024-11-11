@@ -12,7 +12,7 @@ makedocs(;
     authors = "psrenergy",
     pages = [
         "Home" => "index.md",
-    ]
+    ],
 )
 
 deploydocs(;

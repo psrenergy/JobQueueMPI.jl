@@ -8,19 +8,18 @@ JQM.mpi_init()
 N = 5
 data = collect(1:N)
 function g(x, i, data)
-    return i * (x[i] - 2 * i) ^ 2 + data[i]
+    return i * (x[i] - 2 * i)^2 + data[i]
 end
 x0 = zeros(N)
 list_i = collect(1:N)
 fake_input = Int[] # ignored
-
 
 let
     is_done = false
     if JQM.is_controller_process()
         ret = optimize(x0, NelderMead()) do x
             MPI.bcast(is_done, MPI.COMM_WORLD)
-            g_x = JQM.pmap((v)->g(v[1], v[2], data), [(x, i) for i in list_i])
+            g_x = JQM.pmap((v) -> g(v[1], v[2], data), [(x, i) for i in list_i])
             return sum(g_x)
         end
         # tell workers to stop calling pmap
@@ -42,7 +41,7 @@ let
             if is_done
                 break
             end
-            JQM.pmap((v)->g(v[1], v[2], data), fake_input)
+            JQM.pmap((v) -> g(v[1], v[2], data), fake_input)
         end
     end
 end
