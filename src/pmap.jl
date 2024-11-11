@@ -55,11 +55,15 @@ function pmap(f::Function, jobs::Vector, data_defined_in_process = nothing)
             end
             send_termination_message()
             mpi_barrier()
+            result = MPI.bcast(result, controller_rank(), MPI.COMM_WORLD)
+            mpi_barrier()
             return result
         else
             _p_map_workers_loop(f, data_defined_in_process)
             mpi_barrier()
-            return nothing
+            result = MPI.bcast(result, controller_rank(), MPI.COMM_WORLD)
+            mpi_barrier()
+            return result
         end
     else
         for (i, job) in enumerate(jobs)
