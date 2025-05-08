@@ -7,6 +7,8 @@ mutable struct Message
     vector_idx::Int
 end
 
+JQM.enable_debug_messages()
+
 all_jobs_done(controller) = JQM.is_job_queue_empty(controller) && !JQM.any_pending_jobs(controller)
 
 function sum_100(message::Message)

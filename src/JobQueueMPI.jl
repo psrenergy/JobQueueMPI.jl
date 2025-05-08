@@ -2,6 +2,7 @@ module JobQueueMPI
 
 using MPI
 
+include("debug_utils.jl")
 include("mpi_utils.jl")
 include("job.jl")
 include("worker.jl")

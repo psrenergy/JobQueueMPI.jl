@@ -28,7 +28,11 @@ function send_job_answer_to_controller(worker::Worker, message)
         error("Only the controller process can send job answers.")
     end
     job = JobAnswer(worker.job_id_running, message)
-    return MPI.isend(job, _mpi_comm(); dest = controller_rank(), tag = worker.rank + 32)
+    MPI.isend(job, _mpi_comm(); dest = controller_rank(), tag = worker.rank + 32)
+    if _is_debug_enabled()
+        _debug_message("Sending job answer $(job.job_id) to controller")
+    end
+    return nothing
 end
 
 """
@@ -41,6 +45,9 @@ function receive_job(worker::Worker)
         error("Only the controller process can receive jobs.")
     end
     job = MPI.recv(_mpi_comm(); source = controller_rank(), tag = worker.rank + 32)
+    if _is_debug_enabled()
+        _debug_message("Received job $(job.id)")
+    end
     worker.job_id_running = job.id
     return job
 end

@@ -80,6 +80,9 @@ function send_jobs_to_any_available_workers(controller::Controller)
             job = _pick_job_to_send!(controller)
             controller.worker_status[worker] = WORKER_BUSY
             request = MPI.isend(job, _mpi_comm(); dest = worker, tag = worker + 32)
+            if _is_debug_enabled()
+                _debug_message("Sending job $(job.id) to worker $worker")
+            end
             push!(controller.pending_jobs, JobRequest(worker, request))
         end
     end
@@ -96,9 +99,16 @@ function send_termination_message()
     for worker in 1:num_workers()
         request =
             MPI.isend(Job(0, TerminationMessage()), _mpi_comm(); dest = worker, tag = worker + 32)
+        if _is_debug_enabled()
+            _debug_message("Sending Termination message job to worker $worker")
+        end
         push!(requests, JobRequest(worker, request))
     end
-    return _wait_all(requests)
+    if _is_debug_enabled()
+        _debug_message("Waiting for termination messsages to be received.")
+    end
+    _wait_all(requests)
+    return nothing
 end
 
 """
@@ -122,6 +132,11 @@ function check_for_job_answers(controller::Controller)
                 source = controller.pending_jobs[j_i].worker,
                 tag = controller.pending_jobs[j_i].worker + 32,
             )
+            if _is_debug_enabled()
+                _debug_message(
+                    "completed job $(job_answer.job_id)",
+                )
+            end
             controller.worker_status[controller.pending_jobs[j_i].worker] = WORKER_AVAILABLE
             deleteat!(controller.pending_jobs, j_i)
             return job_answer
