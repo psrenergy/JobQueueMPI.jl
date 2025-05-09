@@ -13,14 +13,8 @@ function _is_debug_enabled()
 end
 
 function _debug_message(message)
-    if is_controller_process()
-        open("controller_job_queue_mpi.log", "a") do io
-            return println(io, "DEBUG (controller): ", message)
-        end
-    else
-        worker_rank = my_rank()
-        open("worker_rank_$(worker_rank)_job_queue_mpi.log", "a") do io
-            return println(io, "DEBUG (worker $worker_rank): ", message)
-        end
+    r = my_rank()
+    open("debug_rank_$(r).log", "a") do io
+        return println(io, "DEBUG (rank $r): ", message)
     end
 end
