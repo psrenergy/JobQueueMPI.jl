@@ -107,6 +107,8 @@ function send_termination_message()
     if _is_debug_enabled()
         _debug_message("Waiting for termination messsages to be received.")
     end
+    # Wait all asserts that the request were received by the workers.
+    # and the buffers are deallocated.
     _wait_all(requests)
     return nothing
 end
@@ -120,25 +122,31 @@ function check_for_job_answers(controller::Controller)
     if !is_controller_process()
         error("Only the controller process can check for workers' jobs.")
     end
-    for j_i in eachindex(controller.pending_jobs)
+    for i in eachindex(controller.pending_jobs)
+        # Tests if the job was received by the worker.
+        # If it was not is not worth checking if the worker completed the job.
+        status = MPI.Test(controller.pending_jobs[i].request)
+        if !status
+            continue
+        end
         worker_completed_a_job = MPI.Iprobe(
             _mpi_comm();
-            source = controller.pending_jobs[j_i].worker,
-            tag = controller.pending_jobs[j_i].worker + 32,
+            source = controller.pending_jobs[i].worker,
+            tag = controller.pending_jobs[i].worker + 32,
         )
         if worker_completed_a_job
             job_answer = MPI.recv(
                 _mpi_comm();
-                source = controller.pending_jobs[j_i].worker,
-                tag = controller.pending_jobs[j_i].worker + 32,
+                source = controller.pending_jobs[i].worker,
+                tag = controller.pending_jobs[i].worker + 32,
             )
             if _is_debug_enabled()
                 _debug_message(
                     "completed job $(job_answer.job_id)",
                 )
             end
-            controller.worker_status[controller.pending_jobs[j_i].worker] = WORKER_AVAILABLE
-            deleteat!(controller.pending_jobs, j_i)
+            controller.worker_status[controller.pending_jobs[i].worker] = WORKER_AVAILABLE
+            deleteat!(controller.pending_jobs, i)
             return job_answer
         end
     end

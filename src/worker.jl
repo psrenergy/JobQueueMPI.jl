@@ -28,7 +28,9 @@ function send_job_answer_to_controller(worker::Worker, message)
         error("Only the controller process can send job answers.")
     end
     job = JobAnswer(worker.job_id_running, message)
-    MPI.isend(job, _mpi_comm(); dest = controller_rank(), tag = worker.rank + 32)
+    # Send the job answer to the controller process with a blocking call to make sure
+    # the message is sent and the buffer is deallocated.
+    MPI.send(job, _mpi_comm(); dest = controller_rank(), tag = worker.rank + 32)
     if _is_debug_enabled()
         _debug_message("Sending job answer $(job.job_id) to controller")
     end
